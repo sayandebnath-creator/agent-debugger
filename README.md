@@ -9,6 +9,23 @@ Specialized AI agent for debugging Python errors using structured reasoning and 
 - JSON structured outputs
 - Execution validation (sandboxed)
 
+## Problem Specialization
+
+This agent is specialized for debugging runtime errors in Python code.
+
+### Why this problem?
+Debugging consumes a significant portion of developer time and is highly repetitive.
+
+### Why prioritize it?
+- High frequency in real-world development
+- Measurable outcomes (code runs or fails)
+- Existing LLMs are generic and not execution-validated
+
+This agent focuses on:
+- Root cause identification
+- Minimal code fixes
+- Execution validation
+
 ## Setup
 ```bash
 pip install -r requirements.txt
@@ -53,3 +70,23 @@ Scaled to 10,000
 
 ## Cursor Integration
 Uses `.cursorrules` to enforce minimal, safe, and testable fixes
+
+## API Usage
+
+```bash
+curl -X POST http://127.0.0.1:8000/debug \
+-H "Content-Type: application/json" \
+-d '{"code":"print(x)","error":"NameError"}'
+
+---
+
+# 📂 4. Create `.gitignore` (root folder) or already given in this repo
+
+Paste:
+
+```gitignore
+.env
+__pycache__/
+*.pyc
+evaluation_results.json
+detailed_results.json
