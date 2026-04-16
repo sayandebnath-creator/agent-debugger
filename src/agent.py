@@ -67,6 +67,14 @@ class DebugAgent:
             # fix unescaped newlines inside JSON strings
             raw = raw.replace('\r', '')
 
+            # Handle corrected_code with triple quotes or regular quotes
+            raw = re.sub(
+                r'("corrected_code"\s*:\s*)(""")(.*?)(""")',
+                lambda m: m.group(1) + '"' + m.group(3).replace('\n', '\\n').replace('"', '\\"') + '"',
+                raw,
+                flags=re.DOTALL
+            )
+            # Also handle already-quoted sections that need newline escaping
             raw = re.sub(
                 r'("corrected_code"\s*:\s*")(.*?)(")',
                 lambda m: m.group(1) + m.group(2).replace('\n', '\\n') + m.group(3),
@@ -105,7 +113,14 @@ class DebugAgent:
 
                 json_str = json_match.group()
 
-                # fix unescaped newlines in corrected_code
+                # Handle corrected_code with triple quotes or regular quotes
+                json_str = re.sub(
+                    r'("corrected_code"\s*:\s*)(""")(.*?)(""")',
+                    lambda m: m.group(1) + '"' + m.group(3).replace('\n', '\\n').replace('"', '\\"') + '"',
+                    json_str,
+                    flags=re.DOTALL
+                )
+                # Also handle already-quoted sections that need newline escaping
                 json_str = re.sub(
                     r'("corrected_code"\s*:\s*")(.*?)(")',
                     lambda m: m.group(1) + m.group(2).replace('\n', '\\n') + m.group(3),
