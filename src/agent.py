@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 import time  # used for latency measurement
 import json  # used to enforce structured parsing
@@ -49,6 +50,10 @@ class DebugAgent:
         - Do not rewrite entire code
         - Ensure corrected_code runs without error
         - No markdown, no backticks
+        - Ensure corrected_code is valid Python syntax
+        - Do not use semicolons for loops or control structures
+        - Use proper indentation and new lines for blocks (for, if, etc.)
+        - Preserve existing variables and context unless necessary to change
 
         Code:
         {code}
@@ -59,7 +64,25 @@ class DebugAgent:
         raw = self._call_llm(prompt).strip()
 
         try:
+            # fix unescaped newlines inside JSON strings
+            raw = raw.replace('\r', '')
+
+            raw = re.sub(
+                r'("corrected_code"\s*:\s*")(.*?)(")',
+                lambda m: m.group(1) + m.group(2).replace('\n', '\\n') + m.group(3),
+                raw,
+                flags=re.DOTALL
+            )
             parsed = json.loads(raw)  # strict JSON parsing
+            # clean triple-quoted code
+            code_out = parsed.get("corrected_code", "")
+
+            if isinstance(code_out, str):
+                code_out = code_out.strip()
+                if code_out.startswith('"""') and code_out.endswith('"""'):
+                    code_out = code_out[3:-3].strip()
+
+            parsed["corrected_code"] = code_out
             if not isinstance(parsed, dict) or "corrected_code" not in parsed:
                 raise ValueError("Invalid schema")
 
@@ -68,14 +91,56 @@ class DebugAgent:
             parsed.setdefault("corrected_code", code)
             parsed["latency"] = time.time() - start_time  # latency metric
             parsed["token_usage"] = estimate_tokens(code + error + raw)  # token metric
+
             return parsed
         except Exception:
-            return {
-                "error": "Invalid JSON",
-                "raw": raw,
-                "root_cause": "parse_failed",
-                "fix": "retry_prompt",
-                "corrected_code": code,
-                "latency": time.time() - start_time,  # still track latency
-                "token_usage": estimate_tokens(code + error),
-            }
+            # attempt recovery from malformed JSON
+            try:
+                # extract JSON block if extra text exists
+                json_match = re.search(r"\{.*\}", raw, re.DOTALL)
+                # if json_match:
+                #     parsed = json.loads(json_match.group())
+                if not json_match:
+                    raise ValueError("No JSON found")
+
+                json_str = json_match.group()
+
+                # fix unescaped newlines in corrected_code
+                json_str = re.sub(
+                    r'("corrected_code"\s*:\s*")(.*?)(")',
+                    lambda m: m.group(1) + m.group(2).replace('\n', '\\n') + m.group(3),
+                    json_str,
+                    flags=re.DOTALL
+                )
+
+                parsed = json.loads(json_str)
+
+                # repeat cleanup logic (same as main path)
+                code_out = parsed.get("corrected_code", "")
+
+                if isinstance(code_out, str):
+                    code_out = code_out.strip()
+                    if code_out.startswith('"""') and code_out.endswith('"""'):
+                        code_out = code_out[3:-3].strip()
+
+                parsed["corrected_code"] = code_out
+
+                parsed.setdefault("root_cause", "unknown")
+                parsed.setdefault("fix", "unknown")
+                parsed.setdefault("corrected_code", code)
+                parsed["latency"] = time.time() - start_time
+                parsed["token_usage"] = estimate_tokens(code + error + raw)
+
+                return parsed
+                # else:
+                #     raise ValueError("No JSON found")
+            except Exception:
+                return {
+                    "error": "Invalid JSON",
+                    "raw": raw,
+                    "root_cause": "parse_failed",
+                    "fix": "retry_prompt",
+                    "corrected_code": code,
+                    "latency": time.time() - start_time,  # still track latency
+                    "token_usage": estimate_tokens(code + error),
+                }
