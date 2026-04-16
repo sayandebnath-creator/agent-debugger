@@ -27,8 +27,8 @@ class DebugAgent:
             }, timeout=60, # prevent hanging requests
         )
         # return response.json()["response"]
-        resp.raise_for_status()  # fail fast on API issues
-        data = resp.json()
+        response.raise_for_status()  # fail fast on API issues
+        data = response.json()
         return data.get("response", "")
 
     def debug_code(self, code:str, error:str) -> dict: # type define
