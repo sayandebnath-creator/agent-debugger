@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-OLLAMA_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-MODEL = os.getenv("MODEL", "llama3")
+OLLAMA_URL = os.getenv("OLLAMA_BASE_URL")
+MODEL = os.getenv("MODEL")
 
 def estimate_tokens(text: str) -> int:
     # heuristic token estimator for efficiency scoring
