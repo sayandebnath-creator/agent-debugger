@@ -79,8 +79,8 @@ curl -X POST http://127.0.0.1:8000/debug \
 -d '{"code":"print(x)","error":"NameError"}'
 
 ---
-
-# 📂 4. Create `.gitignore` (root folder) or already given in this repo
+```
+## Create `.gitignore` (root folder) or already given in this repo
 
 Paste:
 
