@@ -1,0 +1,7 @@
+# Cursor Rules
+
+- Always analyze error messages before suggesting fixes
+- Prefer minimal code changes
+- Do not rewrite entire files unless necessary
+- Validate fixes logically
+- Avoid hallucinated libraries or APIs

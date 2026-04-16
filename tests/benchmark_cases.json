@@ -1,0 +1,10 @@
+[
+  {
+    "code": "nums=[1,2,3]\nfor i in range(4): print(nums[i])",
+    "error": "IndexError: list index out of range"
+  },
+  {
+    "code": "print(x)",
+    "error": "NameError: name 'x' is not defined"
+  }
+]
