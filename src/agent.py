@@ -31,14 +31,17 @@ class DebugAgent:
             # return response.json()["response"]
             response.raise_for_status()  # fail fast on API issues
         except Exception as e:
-            return json.dumps({"error": f"LLM call failed: {str(e)}"})  # return error in JSON format
+            return json.dumps({
+                "root_cause": "llm_call_failed",
+                "fix": str(e),
+                "corrected_code": ""
+            }) # return structured error for consistency
         data = response.json()
         return data.get("response", "")
 
     def debug_code(self, code:str, error:str) -> dict: # type define
         start_time = time.time()  # start latency tracking
-        prompt = f"""
-        You are a senior software engineer debugging Python code.
+        prompt = f"""You are a senior software engineer debugging Python code.
         Think step-by-step internally but output ONLY valid JSON.
 
         Return schema strictly:
@@ -93,9 +96,9 @@ class DebugAgent:
                 if code_out.startswith('"""') and code_out.endswith('"""'):
                     code_out = code_out[3:-3].strip()
 
-            parsed["corrected_code"] = code_out
             if not isinstance(parsed, dict) or "corrected_code" not in parsed:
                 raise ValueError("Invalid schema")
+            parsed["corrected_code"] = code_out
 
             parsed.setdefault("root_cause", "unknown")  # schema safety
             parsed.setdefault("fix", "unknown")
