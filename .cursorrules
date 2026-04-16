@@ -5,3 +5,7 @@
 - Do not rewrite entire files unless necessary
 - Validate fixes logically
 - Avoid hallucinated libraries or APIs
+<!-- aligns with executor val -->
+- Validate fixes with execution when possible 
+<!-- enforce deterministic outputs for evaluation -->
+- Return structured JSON output 
