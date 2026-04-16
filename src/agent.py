@@ -19,16 +19,19 @@ class DebugAgent:
         self.model = MODEL
 
     def _call_llm(self, prompt):
-        response = requests.post(
-            f"{OLLAMA_URL}/api/generate",
-            json={
-                "model": self.model,
-                "prompt": prompt,
-                "stream": False
-            }, timeout=60, # prevent hanging requests
-        )
-        # return response.json()["response"]
-        response.raise_for_status()  # fail fast on API issues
+        try:
+            response = requests.post(
+                f"{OLLAMA_URL}/api/generate",
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "stream": False
+                }, timeout=60, # prevent hanging requests
+            )
+            # return response.json()["response"]
+            response.raise_for_status()  # fail fast on API issues
+        except Exception as e:
+            return json.dumps({"error": f"LLM call failed: {str(e)}"})  # return error in JSON format
         data = response.json()
         return data.get("response", "")
 
